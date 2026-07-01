@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ONEEDITOR — India's #1 Video Editing Agency</title>
+<meta name="description" content="India's premium video editing agency. Cinematic edits for YouTube, Instagram, commercials, podcasts. 1000+ projects delivered.">
+<meta property="og:title" content="ONEEDITOR — India's #1 Video Editing Agency">
+<meta property="og:description" content="We don't edit videos. We create addictions.">
+<meta property="og:url" content="https://oneeditor.in">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+tailwind.config={theme:{extend:{fontFamily:{'display':['Space Grotesk','sans-serif'],'body':['Inter','sans-serif']},colors:{'primary':'#050505','secondary':'#0A0A0A','electric':'#2563EB','cyan':'#00E5FF','purple-ac':'#7C3AED'}}}}
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+::-webkit-scrollbar{width:0}
+html{scroll-behavior:auto}
+body{font-family:'Inter',sans-serif;background:#050505;color:#fff;overflow-x:hidden;cursor:none}
+h1,h2,h3,h4,h5,h6{font-family:'Space Grotesk',sans-serif}
+::selection{background:rgba(37,99,235,.4);color:#fff}
+
+.loader{position:fixed;inset:0;z-index:10000;background:#050505;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease}
+.loader-text{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;letter-spacing:-.04em;overflow:hidden}
+.loader-text span{display:inline-block;transform:translateY(100%);opacity:0}
+.loader-line{width:0;height:1px;background:linear-gradient(90deg,#2563EB,#00E5FF,#7C3AED);margin-top:1.5rem}
+.loader-pct{font-family:'Inter',sans-serif;font-size:.75rem;color:rgba(255,255,255,.4);margin-top:1rem;letter-spacing:.2em;font-weight:500}
+
+.cursor-dot{position:fixed;width:6px;height:6px;background:#fff;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .1s,width .3s,height .3s,background .3s}
+.cursor-ring{position:fixed;width:40px;height:40px;border:1px solid rgba(255,255,255,.25);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .4s cubic-bezier(.23,1,.32,1),height .4s cubic-bezier(.23,1,.32,1),border-color .3s,background .3s}
+.cursor-ring.hover{width:60px;height:60px;border-color:rgba(0,229,255,.5);background:rgba(0,229,255,.05)}
+
+.noise{position:fixed;inset:0;z-index:9990;pointer-events:none;opacity:.035}
+.noise::after{content:'';position:absolute;inset:-200%;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:128px 128px;animation:noiseMove .5s steps(3) infinite}
+@keyframes noiseMove{0%{transform:translate(0,0)}33%{transform:translate(-30px,-30px)}66%{transform:translate(30px,30px)}100%{transform:translate(-10px,10px)}}
+
+.navbar{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.25rem 2.5rem;display:flex;align-items:center;justify-content:space-between;transition:all .5s cubic-bezier(.23,1,.32,1)}
+.navbar.scrolled{background:rgba(5,5,5,.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,.05);padding:1rem 2.5rem}
+.nav-link{position:relative;font-size:.8125rem;font-weight:500;color:rgba(255,255,255,.55);letter-spacing:.02em;transition:color .3s}
+.nav-link:hover{color:#fff}
+.nav-link::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:linear-gradient(90deg,#2563EB,#00E5FF);transition:width .3s cubic-bezier(.23,1,.32,1)}
+.nav-link:hover::after{width:100%}
+.nav-cta{font-size:.8125rem;font-weight:600;padding:.5rem 1.25rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;transition:all .3s;letter-spacing:.01em}
+.nav-cta:hover{box-shadow:0 0 30px rgba(37,99,235,.4);transform:translateY(-1px)}
+
+.hero{position:relative;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#heroCanvas{position:absolute;inset:0;z-index:1}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:900px;padding:0 2rem}
+.hero-line{overflow:hidden;display:block}
+.hero-line-inner{display:block;transform:translateY(110%)}
+.hero-h1{font-size:clamp(2.5rem,7vw,5.5rem);font-weight:700;line-height:1.05;letter-spacing:-.04em}
+.hero-h1 .accent{background:linear-gradient(135deg,#2563EB,#00E5FF,#7C3AED);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:clamp(.875rem,1.5vw,1.0625rem);color:rgba(255,255,255,.5);line-height:1.7;max-width:600px;margin:1.75rem auto 0;font-weight:400}
+.hero-btns{display:flex;gap:1rem;justify-content:center;margin-top:2.5rem;flex-wrap:wrap}
+.btn-primary{position:relative;padding:.875rem 2rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;font-size:.875rem;font-weight:600;letter-spacing:.02em;border:none;cursor:none;overflow:hidden;transition:all .4s cubic-bezier(.23,1,.32,1)}
+.btn-primary:hover{box-shadow:0 0 40px rgba(37,99,235,.5),0 0 80px rgba(124,58,237,.2);transform:translateY(-2px)}
+.btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#00E5FF,#2563EB);opacity:0;transition:opacity .4s}
+.btn-primary:hover::before{opacity:1}
+.btn-primary span{position:relative;z-index:1}
+.btn-secondary{padding:.875rem 2rem;border-radius:9999px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);font-size:.875rem;font-weight:500;letter-spacing:.02em;border:1px solid rgba(255,255,255,.1);cursor:none;transition:all .4s cubic-bezier(.23,1,.32,1);display:flex;align-items:center;gap:.5rem}
+.btn-secondary:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);transform:translateY(-2px)}
+.scroll-indicator{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:.5rem}
+.scroll-indicator span{font-size:.625rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.3);font-weight:500}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,rgba(255,255,255,.3),transparent);animation:scrollPulse 2s ease-in-out infinite}
+@keyframes scrollPulse{0%,100%{opacity:.3;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.2)}}
+
+.glow{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0}
+.glow-blue{width:600px;height:600px;background:rgba(37,99,235,.12)}
+.glow-cyan{width:500px;height:500px;background:rgba(0,229,255,.08)}
+.glow-purple{width:500px;height:500px;background:rgba(124,58,237,.1)}
+
+.section-label{font-size:.6875rem;letter-spacing:.25em;text-transform:uppercase;font-weight:600;color:rgba(255,255,255,.35);margin-bottom:1rem}
+.section-h2{font-size:clamp(2rem,5vw,3.75rem);font-weight:700;letter-spacing:-.03em;line-height:1.1}
+
+.story-stage{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:4rem 2rem}
+.story-visual{width:100%;max-width:700px;height:280px;position:relative;margin:0 auto 2.5rem}
+.story-headline{font-size:clamp(1.5rem,4vw,2.75rem);font-weight:700;letter-spacing:-.03em;text-align:center;line-height:1.15}
+.story-text{font-size:.9375rem;color:rgba(255,255,255,.5);text-align:center;max-width:480px;margin:1rem auto 0;line-height:1.7}
+
+.raw-clip{position:absolute;border:1px solid rgba(255,255,255,.15);border-radius:6px;background:rgba(255,255,255,.03);backdrop-filter:blur(4px)}
+.track{position:absolute;height:32px;border-radius:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+.clip-block{position:absolute;height:100%;border-radius:3px}
+.playhead{position:absolute;top:-10px;width:2px;height:calc(100% + 20px);background:#00E5FF;box-shadow:0 0 10px rgba(0,229,255,.6);z-index:5}
+
+.grade-container{width:100%;height:100%;border-radius:12px;overflow:hidden;position:relative;background:#111}
+.grade-before-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.grade-after-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;clip-path:inset(0 100% 0 0)}
+.grade-split{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.5);left:0;z-index:3}
+.grade-label{position:absolute;bottom:12px;padding:4px 12px;border-radius:4px;font-size:.6875rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;z-index:4}
+
+.wave-bar{display:inline-block;width:3px;border-radius:3px;background:linear-gradient(to top,#2563EB,#00E5FF);vertical-align:bottom;margin:0 1.5px;transition:height .15s ease}
+.render-track{width:100%;height:8px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+.render-fill{height:100%;width:0%;background:linear-gradient(90deg,#2563EB,#00E5FF,#7C3AED);border-radius:99px;box-shadow:0 0 20px rgba(0,229,255,.4)}
+
+.service-card{position:relative;padding:2rem;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);transition:all .5s cubic-bezier(.23,1,.32,1);overflow:hidden;cursor:none;transform-style:preserve-3d}
+.service-card::before{content:'';position:absolute;inset:0;border-radius:16px;background:radial-gradient(600px circle at var(--mx,50%) var(--my,50%),rgba(37,99,235,.08),transparent 60%);opacity:0;transition:opacity .5s}
+.service-card:hover::before{opacity:1}
+.service-card:hover{border-color:rgba(37,99,235,.3);box-shadow:0 0 40px rgba(37,99,235,.08),inset 0 0 40px rgba(37,99,235,.03)}
+.service-icon{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(37,99,235,.15),rgba(124,58,237,.15));display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;font-size:1.25rem}
+
+.projects-wrapper{overflow:hidden}
+.projects-track{display:flex;gap:1.5rem;padding:0 2rem;will-change:transform}
+.project-card{flex-shrink:0;width:420px;border-radius:16px;overflow:hidden;position:relative;cursor:none}
+.project-card img{width:100%;height:280px;object-fit:cover;transition:transform .7s cubic-bezier(.23,1,.32,1),filter .7s}
+.project-card:hover img{transform:scale(1.05)}
+.project-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,5,5,.9) 0%,transparent 60%);display:flex;flex-direction:column;justify-content:flex-end;padding:1.5rem;opacity:0;transition:opacity .4s}
+.project-card:hover .project-overlay{opacity:1}
+
+.stat-item{text-align:center;padding:2rem}
+.stat-number{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.5rem,5vw,4rem);font-weight:700;letter-spacing:-.03em;background:linear-gradient(135deg,#fff,rgba(255,255,255,.7));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:.8125rem;color:rgba(255,255,255,.4);margin-top:.5rem;font-weight:500;letter-spacing:.02em}
+
+.logo-item{position:relative;display:flex;align-items:center;justify-content:center;height:56px;width:100%;cursor:none;padding:0 .5rem}
+.logo-item img{height:32px;max-width:120px;object-fit:contain;opacity:.2;filter:grayscale(1) brightness(3);transition:all .6s cubic-bezier(.23,1,.32,1)}
+.logo-item:hover img{opacity:1;filter:grayscale(0) brightness(1);transform:scale(1.12)}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap}
+.logo-row .logo-item{flex:0 0 auto;width:calc(100%/7)}
+
+/* About section */
+.about-image{width:280px;height:340px;border-radius:20px;background:linear-gradient(135deg,rgba(37,99,235,.15),rgba(124,58,237,.15));border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;flex-shrink:0}
+.about-image::before{content:'AB';position:absolute;font-family:'Space Grotesk',sans-serif;font-size:4rem;font-weight:700;color:rgba(255,255,255,.06);letter-spacing:-.04em}
+.about-image::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(37,99,235,.1),transparent,rgba(124,58,237,.1))}
+
+.testi-card{padding:2rem;border-radius:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(12px);transition:all .5s cubic-bezier(.23,1,.32,1)}
+.testi-card:hover{border-color:rgba(0,229,255,.2);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.testi-stars{display:flex;gap:2px;margin-bottom:1rem}
+.testi-stars svg{width:14px;height:14px;fill:#fbbf24}
+
+.contact-section{position:relative;padding:6rem 2rem;overflow:hidden}
+.contact-grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 60% 60% at 50% 50%,#000 10%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse 60% 60% at 50% 50%,#000 10%,transparent 70%)}
+.form-field{position:relative;margin-bottom:1.25rem}
+.form-input{width:100%;padding:.875rem 1rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#fff;font-size:.875rem;font-family:'Inter',sans-serif;outline:none;transition:all .4s cubic-bezier(.23,1,.32,1);cursor:none}
+.form-input:focus{border-color:rgba(37,99,235,.5);box-shadow:0 0 0 3px rgba(37,99,235,.1),0 0 20px rgba(37,99,235,.05);background:rgba(255,255,255,.06)}
+.form-input::placeholder{color:rgba(255,255,255,.25)}
+.form-label{display:block;font-size:.6875rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:.5rem}
+.form-select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='rgba(255,255,255,.3)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center}
+.form-select option{background:#111;color:#fff}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:640px){.form-row{grid-template-columns:1fr}}
+.form-submit{width:100%;padding:1rem;border-radius:12px;background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;font-size:.875rem;font-weight:600;letter-spacing:.02em;border:none;cursor:none;position:relative;overflow:hidden;transition:all .4s cubic-bezier(.23,1,.32,1)}
+.form-submit:hover{box-shadow:0 0 40px rgba(37,99,235,.4);transform:translateY(-2px)}
+.form-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.form-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#00E5FF,#2563EB);opacity:0;transition:opacity .4s}
+.form-submit:hover::before{opacity:1}
+.form-submit span{position:relative;z-index:1}
+.form-success{display:none;text-align:center;padding:2rem}
+.form-success.show{display:block}
+.form-error{display:none;text-align:center;padding:1rem;border-radius:12px;background:rgba(255,50,50,.1);border:1px solid rgba(255,50,50,.2);margin-bottom:1rem}
+.form-error.show{display:block}
+
+.footer-link{color:rgba(255,255,255,.4);transition:color .3s;font-size:.8125rem}
+.footer-link:hover{color:#00E5FF}
+.reveal{opacity:0;transform:translateY(40px)}
+.mobile-toggle{display:none;flex-direction:column;gap:5px;cursor:none;padding:4px}
+.mobile-toggle span{width:20px;height:1.5px;background:#fff;transition:all .3s}
+.magnetic-wrap{display:inline-block;position:relative}
+
+@media(max-width:768px){
+  .nav-links{display:none!important}
+  .mobile-toggle{display:flex}
+  .project-card{width:300px}
+  .project-card img{height:200px}
+  .story-visual{height:200px}
+  .cursor-dot,.cursor-ring{display:none}
+  body{cursor:auto}
+  .logo-row .logo-item{width:calc(100%/3);margin-bottom:1.5rem}
+  .form-input,.form-submit{cursor:auto}
+  .about-image{width:200px;height:240px}
+}
+@media(max-width:480px){
+  .logo-row .logo-item{width:calc(100%/2)}
+}
+</style>
+</head>
+<body>
+
+<!-- Loader -->
+<div class="loader" id="loader">
+  <div class="loader-text"><span>O</span><span>N</span><span>E</span><span>E</span><span>D</span><span>I</span><span>T</span><span>O</span><span>R</span></div>
+  <div class="loader-line" id="loaderLine"></div>
+  <div class="loader-pct" id="loaderPct">0%</div>
+</div>
+
+<div class="noise"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Navbar -->
+<nav class="navbar" id="navbar">
+  <a href="#" class="font-display font-bold text-lg tracking-tight magnetic-wrap" style="letter-spacing:-.04em">ONEEDITOR</a>
+  <div class="nav-links hidden md:flex items-center gap-8">
+    <a href="#hero" class="nav-link">Home</a>
+    <a href="#projects" class="nav-link">Projects</a>
+    <a href="#services" class="nav-link">Services</a>
+    <a href="#about" class="nav-link">About</a>
+    <a href="#stats" class="nav-link">Why Us</a>
+    <a href="#testimonials" class="nav-link">Testimonials</a>
+    <a href="#contact" class="nav-link">Contact</a>
+  </div>
+  <div class="flex items-center gap-4">
+    <a href="#contact" class="nav-cta hidden sm:inline-block magnetic-wrap">Book a Call</a>
+    <div class="mobile-toggle" id="mobileToggle"><span></span><span></span><span></span></div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero" id="hero">
+  <canvas id="heroCanvas"></canvas>
+  <div class="glow glow-blue" style="top:-200px;left:-100px"></div>
+  <div class="glow glow-purple" style="bottom:-200px;right:-100px"></div>
+  <div class="hero-content">
+    <h1 class="hero-h1">
+      <span class="hero-line"><span class="hero-line-inner">We Don't Edit Videos.</span></span>
+      <span class="hero-line"><span class="hero-line-inner">We Create <span class="accent">Addictions.</span></span></span>
+    </h1>
+    <p class="hero-sub reveal" style="transition-delay:.6s">India's #1 Video Editing Agency helping creators, brands, startups, and businesses dominate attention through world-class cinematic editing.</p>
+    <div class="hero-btns reveal" style="transition-delay:.8s">
+      <button class="btn-primary magnetic-wrap" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})"><span>Start Your Project</span></button>
+      <button class="btn-secondary magnetic-wrap" id="showreelBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        Watch Showreel
+      </button>
+    </div>
+  </div>
+  <div class="scroll-indicator" id="scrollInd"><span>Scroll</span><div class="scroll-line"></div></div>
+</section>
+
+<!-- Stage 1 -->
+<section class="story-stage" id="stage1">
+  <div class="glow glow-blue" style="top:10%;left:-10%"></div>
+  <div style="max-width:800px;width:100%">
+    <p class="section-label text-center reveal">01 — RAW FOOTAGE</p>
+    <div class="story-visual" id="rawVisual"></div>
+    <h2 class="story-headline reveal">Every masterpiece starts with chaos.</h2>
+    <p class="story-text reveal">Hours of raw footage. Multiple angles. Endless takes. We turn the overwhelming into the unforgettable.</p>
+  </div>
+</section>
+
+<!-- Stage 2 -->
+<section class="story-stage" id="stage2">
+  <div class="glow glow-cyan" style="bottom:10%;right:-10%"></div>
+  <div style="max-width:800px;width:100%">
+    <p class="section-label text-center reveal">02 — TIMELINE</p>
+    <div class="story-visual" id="timelineVisual">
+      <div class="track" style="top:20px;left:0;right:0" id="track1"></div>
+      <div class="track" style="top:72px;left:0;right:0" id="track2"></div>
+      <div class="track" style="top:124px;left:0;right:0" id="track3"></div>
+      <div class="track" style="top:176px;left:0;right:0" id="track4"></div>
+      <div class="playhead" id="playhead" style="left:0%"></div>
+    </div>
+    <h2 class="story-headline reveal">Every Frame Has A Purpose.</h2>
+    <p class="story-text reveal">Precision cuts. Seamless transitions. Each frame is placed with surgical intention to maximize emotional impact.</p>
+  </div>
+</section>
+
+<!-- Stage 3 -->
+<section class="story-stage" id="stage3">
+  <div class="glow glow-purple" style="top:20%;left:50%;transform:translateX(-50%)"></div>
+  <div style="max-width:800px;width:100%">
+    <p class="section-label text-center reveal">03 — MOTION GRAPHICS</p>
+    <div class="story-visual" id="motionVisual" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem">
+      <div id="motionTitle" style="font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;letter-spacing:-.03em;opacity:0;transform:translateX(-30px)">ONEEDITOR</div>
+      <div id="motionLower" style="width:0;height:36px;background:linear-gradient(90deg,rgba(37,99,235,.3),rgba(0,229,255,.3));border-radius:6px;display:flex;align-items:center;padding:0;overflow:hidden;transition:all .6s">
+        <span style="font-size:.75rem;font-weight:600;letter-spacing:.1em;color:rgba(255,255,255,.8);white-space:nowrap;padding:0 16px">PREMIUM VIDEO EDITING</span>
+      </div>
+      <div id="motionParticles" style="position:relative;width:200px;height:40px"></div>
+    </div>
+    <h2 class="story-headline reveal">Motion That Captures Attention.</h2>
+    <p class="story-text reveal">Dynamic titles, kinetic typography, and fluid motion graphics that elevate your content beyond the ordinary.</p>
+  </div>
+</section>
+
+<!-- Stage 4 — Color Grade -->
+<section class="story-stage" id="stage4">
+  <div class="glow glow-cyan" style="top:30%;right:-5%"></div>
+  <div style="max-width:800px;width:100%">
+    <p class="section-label text-center reveal">04 — COLOR GRADING</p>
+    <div class="story-visual" id="gradeVisual">
+      <div class="grade-container">
+        <img src="https://z-cdn-media.chatglm.cn/files/29cbde0c-fd73-4479-bfbb-2030fecfe6fb.png?auth_key=1882928644-67c962eef9a74c06bfcffd528e4615b1-0-b54c2933db06987c41b1b668a76ceb86" alt="Before color grading" class="grade-before-img" loading="lazy">
+        <img src="https://z-cdn-media.chatglm.cn/files/7813cb33-6f50-406e-95af-b20abe44a097.png?auth_key=1882928644-35ae81c9c2504a2199bf25c2908b8db9-0-24faa34a3cfa5d2c1635c63f28afdc5a" alt="After color grading" class="grade-after-img" id="gradeAfter" loading="lazy">
+        <div class="grade-split" id="gradeSplit"></div>
+        <div class="grade-label" style="left:12px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.5)">BEFORE</div>
+        <div class="grade-label" style="right:12px;background:rgba(37,99,235,.6);color:#fff">AFTER</div>
+      </div>
+    </div>
+    <h2 class="story-headline reveal">Ordinary Footage.<br>Extraordinary Cinema.</h2>
+    <p class="story-text reveal">Hollywood-grade color science that transforms flat footage into a visual masterpiece with depth, mood, and emotion.</p>
+  </div>
+</section>
+
+<!-- Stage 5 -->
+<section class="story-stage" id="stage5">
+  <div class="glow glow-purple" style="bottom:20%;left:-5%"></div>
+  <div style="max-width:800px;width:100%">
+    <p class="section-label text-center reveal">05 — SOUND DESIGN</p>
+    <div class="story-visual" id="soundVisual" style="display:flex;align-items:center;justify-content:center;height:200px">
+      <div id="waveform" style="display:flex;align-items:flex-end;height:120px;gap:2px"></div>
+    </div>
+    <h2 class="story-headline reveal">Every Sound Matters.</h2>
+    <p class="story-text reveal">Immersive soundscapes, perfectly timed SFX, and dynamic audio mixing that makes viewers feel every moment.</p>
+  </div>
+</section>
+
+<!-- Stage 6 -->
+<section class="story-stage" id="stage6">
+  <div class="glow glow-blue" style="top:20%;left:40%"></div>
+  <div class="glow glow-cyan" style="bottom:10%;right:20%"></div>
+  <div style="max-width:800px;width:100%">
+    <p class="section-label text-center reveal">06 — FINAL EXPORT</p>
+    <div class="story-visual" id="exportVisual" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem">
+      <div style="width:100%;max-width:500px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:.75rem">
+          <span style="font-size:.75rem;font-weight:600;letter-spacing:.1em;color:rgba(255,255,255,.5)">RENDERING</span>
+          <span id="renderPct" style="font-size:.75rem;font-weight:700;color:#00E5FF;font-family:'Space Grotesk',sans-serif">0%</span>
+        </div>
+        <div class="render-track"><div class="render-fill" id="renderFill"></div></div>
+      </div>
+      <div id="platformIcons" style="display:flex;gap:1.5rem;opacity:0;transform:translateY(20px);flex-wrap:wrap;justify-content:center"></div>
+    </div>
+    <h2 class="story-headline reveal">Ready To Go Viral.</h2>
+    <p class="story-text reveal">Optimized for every platform. Every format. Every frame pixel-perfect and ready to dominate feeds.</p>
+    <div style="text-align:center;margin-top:2rem" class="reveal">
+      <button class="btn-primary magnetic-wrap" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})"><span>Let's Build Something Incredible</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- Services -->
+<section id="services" class="py-32 px-6 md:px-12 relative">
+  <div class="glow glow-blue" style="top:-200px;right:-200px"></div>
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16">
+      <p class="section-label reveal">WHAT WE DO</p>
+      <h2 class="section-h2 reveal">Crafted For Perfection.</h2>
+      <p class="mt-4 text-sm md:text-base reveal" style="color:rgba(255,255,255,.45);max-width:500px;margin-left:auto;margin-right:auto">Every service designed to elevate your content from good to absolutely unforgettable.</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="servicesGrid"></div>
+  </div>
+</section>
+
+<!-- Projects -->
+<section id="projects" class="py-32 relative overflow-hidden">
+  <div class="max-w-7xl mx-auto px-6 md:px-12 mb-12">
+    <p class="section-label reveal">SELECTED WORK</p>
+    <h2 class="section-h2 reveal">Projects That Speak.</h2>
+  </div>
+  <div class="projects-wrapper"><div class="projects-track" id="projectsTrack"></div></div>
+</section>
+
+<!-- Stats -->
+<section id="stats" class="py-32 px-6 md:px-12 relative">
+  <div class="glow glow-cyan" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-16">
+      <p class="section-label reveal">THE NUMBERS</p>
+      <h2 class="section-h2 reveal">Results That Matter.</h2>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="stat-item reveal"><div class="stat-number"><span class="counter" data-target="1000">0</span>+</div><div class="stat-label">Projects Delivered</div></div>
+      <div class="stat-item reveal"><div class="stat-number"><span class="counter" data-target="50">0</span>M+</div><div class="stat-label">Views Generated</div></div>
+      <div class="stat-item reveal"><div class="stat-number"><span class="counter" data-target="500">0</span>+</div><div class="stat-label">Happy Clients</div></div>
+      <div class="stat-item reveal"><div class="stat-number"><span class="counter" data-target="99">0</span>%</div><div class="stat-label">Client Satisfaction</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Client Logos -->
+<section id="clients" class="py-28 px-6 md:px-12 relative overflow-hidden">
+  <div class="glow glow-blue" style="top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:400px;opacity:.4"></div>
+  <div class="max-w-5xl mx-auto relative z-10">
+    <p class="section-label text-center mb-4 reveal">WHO TRUSTS US</p>
+    <h2 class="section-h2 text-center reveal" style="font-size:clamp(1.5rem,3.5vw,2.5rem)">Brands That Chose Excellence.</h2>
+    <p class="text-center mt-3 mb-14 reveal" style="color:rgba(255,255,255,.35);font-size:.875rem;max-width:420px;margin-left:auto;margin-right:auto">From global conglomerates to iconic restaurants — we've delivered for the best.</p>
+        <div class="logo-row reveal" id="logoRow">
+      <div class="logo-item"><img src="/assets/logos/trends.png" alt="TRENDS" loading="lazy"></div>
+      <div class="logo-item"><img src="/assets/logos/marks-spencer.png" alt="Marks & Spencer" loading="lazy"></div>
+      <div class="logo-item"><img src="/assets/logos/kama.png" alt="Kama Restaurant" loading="lazy"></div>
+      <div class="logo-item"><img src="/assets/logos/mirchi.png" alt="Mirchi" loading="lazy"></div>
+      <div class="logo-item"><img src="/assets/logos/adani.png" alt="Adani" loading="lazy"></div>
+      <div class="logo-item"><img src="/assets/logos/colavita.png" alt="Colavita" loading="lazy"></div>
+      <div class="logo-item"><img src="/assets/logos/zydus.png" alt="Zydus" loading="lazy"></div>
+    </div>
+</section>
+
+<!-- About -->
+<section id="about" class="py-32 px-6 md:px-12 relative">
+  <div class="glow glow-purple" style="top:20%;right:-100px"></div>
+  <div class="max-w-5xl mx-auto">
+    <div class="flex flex-col md:flex-row items-center gap-12 md:gap-16">
+      <div class="about-image reveal"></div>
+      <div class="flex-1">
+        <p class="section-label reveal">ABOUT US</p>
+        <h2 class="section-h2 reveal" style="font-size:clamp(1.75rem,4vw,2.75rem)">The Mind Behind<br>The Edits.</h2>
+        <div class="mt-6 reveal" style="width:48px;height:2px;background:linear-gradient(90deg,#2563EB,#00E5FF);border-radius:99px"></div>
+        <p class="mt-6 reveal" style="font-size:.9375rem;color:rgba(255,255,255,.6);line-height:1.8">
+          <span class="font-display font-semibold text-white">A H Bhushieth</span> is an experienced storyteller and video editor who founded ONEEDITOR with one mission — to transform how brands and creators connect with their audiences through the power of visual storytelling.
+        </p>
+        <p class="mt-4 reveal" style="font-size:.9375rem;color:rgba(255,255,255,.45);line-height:1.8">
+          With years of hands-on experience in cinematic editing, color science, and motion design, Bhushieth has built a studio that treats every project as a narrative — not just a video. From Fortune 500 brands to India's top creators, the philosophy remains the same: every frame must earn its place.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3 reveal">
+          <span style="padding:.375rem .875rem;border-radius:99px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.2);font-size:.75rem;font-weight:500;color:rgba(255,255,255,.6);letter-spacing:.02em">Cinematic Editing</span>
+          <span style="padding:.375rem .875rem;border-radius:99px;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);font-size:.75rem;font-weight:500;color:rgba(255,255,255,.6);letter-spacing:.02em">Color Science</span>
+          <span style="padding:.375rem .875rem;border-radius:99px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);font-size:.75rem;font-weight:500;color:rgba(255,255,255,.6);letter-spacing:.02em">Visual Storytelling</span>
+          <span style="padding:.375rem .875rem;border-radius:99px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.2);font-size:.75rem;font-weight:500;color:rgba(255,255,255,.6);letter-spacing:.02em">Motion Design</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section id="testimonials" class="py-32 px-6 md:px-12 relative">
+  <div class="glow glow-purple" style="top:-100px;left:-100px"></div>
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <p class="section-label reveal">TESTIMONIALS</p>
+      <h2 class="section-h2 reveal">Loved By Creators.</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="testimonialsGrid"></div>
+  </div>
+</section>
+
+<!-- Contact Form -->
+<section id="contact" class="contact-section">
+  <div class="contact-grid-bg"></div>
+  <div class="glow glow-blue" style="top:50%;left:50%;transform:translate(-50%,-50%);width:800px;height:800px;opacity:.5"></div>
+  <div class="relative z-10" style="max-width:560px;margin:0 auto">
+    <p class="section-label text-center reveal">LET'S WORK TOGETHER</p>
+    <h2 class="section-h2 text-center reveal" style="font-size:clamp(2rem,5vw,3.5rem)">Ready To Dominate<br>Attention?</h2>
+    <p class="text-center mt-4 mb-10 reveal" style="color:rgba(255,255,255,.45);font-size:.9375rem;max-width:450px;margin-left:auto;margin-right:auto">Tell us about your project and we'll get back to you within 24 hours.</p>
+    <div class="form-error" id="formError">
+      <p style="font-size:.8125rem;color:rgba(255,100,100,.8)">Something went wrong. Please try again or email us directly at <a href="mailto:oneeditor25@gmail.com" style="color:#00E5FF;text-decoration:underline">oneeditor25@gmail.com</a></p>
+    </div>
+    <form id="contactForm" action="https://formspree.io/f/mvzjwvgq" method="POST" class="reveal">
+      <div class="form-row">
+        <div class="form-field"><label class="form-label">Name *</label><input type="text" name="name" class="form-input" placeholder="Your full name" required></div>
+        <div class="form-field"><label class="form-label">Email *</label><input type="email" name="email" class="form-input" placeholder="you@company.com" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label class="form-label">Phone</label><input type="tel" name="phone" class="form-input" placeholder="+91 98765 43210"></div>
+        <div class="form-field">
+          <label class="form-label">Project Type *</label>
+          <select name="project_type" class="form-input form-select" required>
+            <option value="" disabled selected>Select type</option>
+            <option value="YouTube Video">YouTube Video</option>
+            <option value="Instagram Reels">Instagram Reels</option>
+            <option value="Commercial Ad">Commercial Ad</option>
+            <option value="Podcast Editing">Podcast Editing</option>
+            <option value="Wedding Film">Wedding Film</option>
+            <option value="Real Estate Video">Real Estate Video</option>
+            <option value="Automotive Video">Automotive Video</option>
+            <option value="Gaming Video">Gaming Video</option>
+            <option value="Color Grading Only">Color Grading Only</option>
+            <option value="Motion Graphics">Motion Graphics</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field"><label class="form-label">Tell Us About Your Project *</label><textarea name="message" class="form-input" rows="5" placeholder="Describe your project, timeline, and any specific requirements..." required style="resize:vertical;min-height:120px"></textarea></div>
+      <input type="hidden" name="_subject" value="New Project Inquiry — ONEEDITOR Website">
+      <input type="hidden" name="_replyto" value="">
+      <input type="text" name="_gotcha" style="display:none">
+      <button type="submit" class="form-submit magnetic-wrap" id="submitBtn"><span id="submitText">Send Project Inquiry</span></button>
+      <p class="text-center mt-4" style="font-size:.75rem;color:rgba(255,255,255,.25)">Or email us directly at <a href="mailto:oneeditor25@gmail.com" style="color:rgba(255,255,255,.4);text-decoration:underline;transition:color .3s" onmouseenter="this.style.color='#00E5FF'" onmouseleave="this.style.color='rgba(255,255,255,.4)'">oneeditor25@gmail.com</a></p>
+    </form>
+    <div class="form-success" id="formSuccess">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#00E5FF" stroke-width="1.5" opacity=".3"/><circle cx="12" cy="12" r="8" fill="rgba(0,229,255,.1)"/><path d="M8 12.5L10.5 15L16 9" stroke="#00E5FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h3 class="font-display text-xl font-semibold mb-2">Inquiry Sent.</h3>
+      <p style="color:rgba(255,255,255,.5);font-size:.875rem;max-width:360px;margin:0 auto 1.5rem">We've received your project details. Our team will review and get back to you within 24 hours.</p>
+      <button onclick="resetForm()" class="btn-secondary magnetic-wrap" style="margin:0 auto"><span>Send Another Inquiry</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-12 px-6 md:px-12 border-t" style="border-color:rgba(255,255,255,.06)">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+    <div class="text-center md:text-left">
+      <div class="font-display font-bold text-lg tracking-tight" style="letter-spacing:-.04em">ONEEDITOR</div>
+      <p style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:.25rem">India's #1 Video Editing Agency</p>
+    </div>
+    <div class="flex items-center gap-6">
+      <a href="#" class="footer-link">Instagram</a>
+      <a href="#" class="footer-link">LinkedIn</a>
+      <a href="#" class="footer-link">Behance</a>
+      <a href="mailto:oneeditor25@gmail.com" class="footer-link">Email</a>
+    </div>
+    <p style="font-size:.6875rem;color:rgba(255,255,255,.2)">© 2026 ONEEDITOR. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- Showreel Modal -->
+<div id="showreelModal" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);display:none;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;padding:2rem">
+  <button id="closeModal" style="position:absolute;top:2rem;right:2rem;background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:1.5rem;padding:.5rem">✕</button>
+  <div style="width:100%;max-width:900px;aspect-ratio:16/9;background:rgba(255,255,255,.05);border-radius:16px;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem">
+    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#7C3AED);display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><polygon points="8,5 19,12 8,19"/></svg></div>
+    <p style="font-size:.8125rem;color:rgba(255,255,255,.4)">Showreel coming soon</p>
+  </div>
+</div>
+
+<script>
+const services=[{name:'Video Editing',desc:'Cinematic cuts that captivate.',icon:'✂️'},{name:'Podcast Editing',desc:'Professional audio & video podcasts.',icon:'🎙️'},{name:'YouTube Editing',desc:'Retention-optimized long-form edits.',icon:'▶️'},{name:'Instagram Reels',desc:'Scroll-stopping short-form content.',icon:'📱'},{name:'Commercial Ads',desc:'High-impact brand commercials.',icon:'🎬'},{name:'Real Estate Videos',desc:'Luxury property showcases.',icon:'🏢'},{name:'Automotive Videos',desc:'Cinematic car content.',icon:'🏎️'},{name:'Gaming Videos',desc:'Dynamic gaming highlights.',icon:'🎮'},{name:'Wedding Films',desc:'Emotional storytelling masterpieces.',icon:'💍'},{name:'Color Grading',desc:'Hollywood-grade color science.',icon:'🎨'},{name:'Motion Graphics',desc:'Eye-catching animated elements.',icon:'✨'},{name:'Visual Effects',desc:'Seamless VFX integration.',icon:'⚡'}];
+const projects=[{title:'Nike Campaign',cat:'Commercial',img:'https://picsum.photos/seed/nike-camp/840/560.jpg'},{title:'Travel Vlog Series',cat:'YouTube',img:'https://picsum.photos/seed/travel-vlog/840/560.jpg'},{title:'Tech Product Launch',cat:'Ad Film',img:'https://picsum.photos/seed/tech-prod/840/560.jpg'},{title:'Luxury Real Estate',cat:'Real Estate',img:'https://picsum.photos/seed/lux-estate/840/560.jpg'},{title:'Fitness Brand Reel',cat:'Instagram',img:'https://picsum.photos/seed/fit-brand/840/560.jpg'},{title:'Wedding Film',cat:'Wedding',img:'https://picsum.photos/seed/wed-film/840/560.jpg'},{title:'Automotive Showcase',cat:'Automotive',img:'https://picsum.photos/seed/auto-show/840/560.jpg'},{title:'Documentary Series',cat:'Documentary',img:'https://picsum.photos/seed/doc-series/840/560.jpg'}];
+const testimonials=[{name:'Arjun Mehta',role:'YouTuber · 2M Subscribers',text:'ONEEDITOR transformed my channel. Retention went from 35% to 68%. They don\'t just edit — they engineer attention.',stars:5},{name:'Priya Sharma',role:'Founder · Luxe Brands',text:'The quality of their commercial work rivals agencies charging 10x more. Absolutely world-class production value.',stars:5},{name:'Rahul Kapoor',role:'Podcast Host · Top 10 India',text:'Our podcast went from zero to 500K downloads in 3 months. Their editing makes every episode feel like a Netflix special.',stars:5}];
+const platforms=[{name:'YouTube',color:'#FF0000'},{name:'Instagram',color:'#E1306C'},{name:'TikTok',color:'#00f2ea'},{name:'LinkedIn',color:'#0A66C2'},{name:'Ads',color:'#2563EB'},{name:'TV',color:'#7C3AED'}];
+
+const sg=document.getElementById('servicesGrid');services.forEach((s,i)=>{sg.innerHTML+=`<div class="service-card reveal" style="transition-delay:${i*50}ms" data-tilt><div class="service-icon">${s.icon}</div><h3 class="font-display font-semibold text-sm tracking-tight mb-2">${s.name}</h3><p style="font-size:.8125rem;color:rgba(255,255,255,.4);line-height:1.6">${s.desc}</p></div>`});
+const pt=document.getElementById('projectsTrack');projects.forEach(p=>{pt.innerHTML+=`<div class="project-card"><img src="${p.img}" alt="${p.title}" loading="lazy"><div class="project-overlay"><span style="font-size:.6875rem;font-weight:600;letter-spacing:.15em;color:#00E5FF;text-transform:uppercase">${p.cat}</span><h3 class="font-display font-semibold text-lg mt-1">${p.title}</h3></div></div>`});
+const tg=document.getElementById('testimonialsGrid');testimonials.forEach(t=>{let s='';for(let i=0;i<t.stars;i++)s+='<svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';tg.innerHTML+=`<div class="testi-card reveal"><div class="testi-stars">${s}</div><p style="font-size:.9375rem;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:1.5rem">"${t.text}"</p><div><div class="font-display font-semibold text-sm">${t.name}</div><div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:.25rem">${t.role}</div></div></div>`});
+const pi=document.getElementById('platformIcons');platforms.forEach(p=>{pi.innerHTML+=`<div style="display:flex;flex-direction:column;align-items:center;gap:.5rem"><div style="width:48px;height:48px;border-radius:12px;background:${p.color}22;border:1px solid ${p.color}44;display:flex;align-items:center;justify-content:center;font-size:.625rem;font-weight:700;color:${p.color};letter-spacing:.05em">${p.name.substring(0,2).toUpperCase()}</div><span style="font-size:.625rem;color:rgba(255,255,255,.35);font-weight:500">${p.name}</span></div>`});
+
+const rv=document.getElementById('rawVisual');[{w:80,h:55,x:5,y:10,rot:-8,c:'rgba(37,99,235,.2)'},{w:60,h:45,x:15,y:55,rot:5,c:'rgba(0,229,255,.2)'},{w:70,h:50,x:30,y:20,rot:-3,c:'rgba(124,58,237,.2)'},{w:55,h:40,x:50,y:60,rot:7,c:'rgba(37,99,235,.15)'},{w:65,h:48,x:65,y:15,rot:-6,c:'rgba(0,229,255,.15)'},{w:50,h:38,x:78,y:50,rot:4,c:'rgba(124,58,237,.15)'},{w:75,h:52,x:42,y:5,rot:2,c:'rgba(37,99,235,.18)'},{w:58,h:42,x:20,y:75,rot:-4,c:'rgba(0,229,255,.18)'}].forEach((c,i)=>{const e=document.createElement('div');e.className='raw-clip';e.style.cssText=`width:${c.w}px;height:${c.h}px;left:${c.x}%;top:${c.y}%;transform:rotate(${c.rot}deg);background:${c.c}`;e.dataset.ox=c.x;e.dataset.oy=c.y;e.dataset.or=c.rot;rv.appendChild(e)});
+const cc=['#2563EB','#00E5FF','#7C3AED','#2563EB','#00E5FF','#7C3AED','#2563EB','#00E5FF','#7C3AED','#2563EB','#00E5FF','#7C3AED'];[{t:'track1',l:5,w:20},{t:'track1',l:28,w:15},{t:'track1',l:48,w:25},{t:'track1',l:78,w:18},{t:'track2',l:2,w:25},{t:'track2',l:30,w:20},{t:'track2',l:55,w:18},{t:'track2',l:78,w:20},{t:'track3',l:8,w:18},{t:'track3',l:30,w:22},{t:'track3',l:57,w:15},{t:'track3',l:77,w:21},{t:'track4',l:3,w:30},{t:'track4',l:38,w:28},{t:'track4',l:72,w:26}].forEach((c,i)=>{const b=document.createElement('div');b.className='clip-block';b.style.cssText=`left:${c.l}%;width:${c.w}%;background:${cc[i]}33;border:1px solid ${cc[i]}44;opacity:0;transform:scaleX(0);transform-origin:left`;document.getElementById(c.t).appendChild(b)});
+const wf=document.getElementById('waveform');for(let i=0;i<60;i++){const b=document.createElement('div');b.className='wave-bar';b.style.height='4px';b.style.opacity='0.3';wf.appendChild(b)}
+const mp=document.getElementById('motionParticles');for(let i=0;i<12;i++){const d=document.createElement('div');d.style.cssText=`position:absolute;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;border-radius:50%;background:${['#2563EB','#00E5FF','#7C3AED'][i%3]};left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:0`;mp.appendChild(d)}
+
+// Contact Form
+const contactForm=document.getElementById('contactForm'),submitBtn=document.getElementById('submitBtn'),submitText=document.getElementById('submitText'),formError=document.getElementById('formError'),formSuccess=document.getElementById('formSuccess');
+contactForm.querySelector('input[name="email"]').addEventListener('input',function(){contactForm.querySelector('input[name="_replyto"]').value=this.value});
+contactForm.addEventListener('submit',async function(e){e.preventDefault();formError.classList.remove('show');submitBtn.disabled=true;submitText.textContent='Sending...';try{const r=await fetch(contactForm.action,{method:'POST',body:new FormData(contactForm),headers:{'Accept':'application/json'}});if(r.ok){contactForm.style.display='none';formSuccess.classList.add('show');gsap.from(formSuccess,{opacity:0,y:20,duration:.6,ease:'power3.out'})}else throw new Error('Failed')}catch(err){formError.classList.add('show');gsap.from(formError,{opacity:0,y:-10,duration:.4,ease:'power2.out'})}finally{submitBtn.disabled=false;submitText.textContent='Send Project Inquiry'}});
+function resetForm(){contactForm.reset();contactForm.style.display='block';formSuccess.classList.remove('show');gsap.from(contactForm,{opacity:0,y:20,duration:.6,ease:'power3.out'})}
+
+// Loader
+const loader=document.getElementById('loader'),loaderLine=document.getElementById('loaderLine'),loaderPct=document.getElementById('loaderPct'),loaderChars=document.querySelectorAll('.loader-text span');
+gsap.to(loaderChars,{y:0,opacity:1,duration:.6,stagger:.04,ease:'power3.out',delay:.2});
+gsap.to(loaderLine,{width:'160px',duration:1.8,ease:'power2.inOut',delay:.6});
+let pctObj={val:0};gsap.to(pctObj,{val:100,duration:2.4,ease:'power2.inOut',delay:.3,onUpdate:()=>{loaderPct.textContent=Math.round(pctObj.val)+'%'}});
+gsap.timeline({delay:2.8}).to(loaderChars,{y:-110,opacity:0,duration:.4,stagger:.02,ease:'power3.in'}).to(loaderLine,{width:0,duration:.3,ease:'power2.in'},'-=.2').to(loaderPct,{opacity:0,duration:.2},'-=.3').to(loader,{opacity:0,duration:.5,onComplete:()=>{loader.style.display='none';initAnimations()}});
+
+// Lenis
+const lenis=new Lenis({duration:1.2,easing:t=>Math.min(1,1.001-Math.pow(2,-10*t)),smooth:true});lenis.on('scroll',ScrollTrigger.update);gsap.ticker.add(time=>lenis.raf(time*1000));gsap.ticker.lagSmoothing(0);
+
+// Cursor
+const dot=document.getElementById('cursorDot'),ring=document.getElementById('cursorRing');let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px'});
+function updateRing(){rx+=(mx-rx)*.15;ry+=(my-ry)*.15;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(updateRing)}updateRing();
+document.querySelectorAll('a,button,.service-card,.project-card,.nav-cta,.btn-primary,.btn-secondary,.magnetic-wrap,.logo-item,.form-input,.form-select,.form-submit').forEach(el=>{el.addEventListener('mouseenter',()=>ring.classList.add('hover'));el.addEventListener('mouseleave',()=>ring.classList.remove('hover'))});
+
+// Navbar
+const navbar=document.getElementById('navbar');ScrollTrigger.create({start:'top -80',onUpdate:s=>{navbar.classList.toggle('scrolled',s.direction===1&&s.scroll()>80)}});window.addEventListener('scroll',()=>{if(window.scrollY<80)navbar.classList.remove('scrolled')});
+
+// Hero Canvas
+const canvas=document.getElementById('heroCanvas'),ctx=canvas.getContext('2d');let cw,ch,particles=[],mouse={x:0,y:0};
+function resizeCanvas(){cw=canvas.width=window.innerWidth;ch=canvas.height=window.innerHeight}resizeCanvas();window.addEventListener('resize',resizeCanvas);
+document.getElementById('hero').addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+const cols=['rgba(37,99,235,','rgba(0,229,255,','rgba(124,58,237,'];
+class Particle{constructor(){this.reset()}reset(){this.x=Math.random()*cw;this.y=Math.random()*ch;this.size=Math.random()*2+.5;this.speedX=(Math.random()-.5)*.3;this.speedY=(Math.random()-.5)*.3;this.opacity=Math.random()*.4+.1;this.colorBase=cols[Math.floor(Math.random()*3)];this.isDiamond=Math.random()<.06;if(this.isDiamond)this.size=Math.random()*4+3}update(){this.x+=this.speedX;this.y+=this.speedY;const dx=this.x-mouse.x,dy=this.y-mouse.y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){const f=(150-dist)/150*.8;this.x+=(dx/dist)*f;this.y+=(dy/dist)*f}if(this.x<-10||this.x>cw+10||this.y<-10||this.y>ch+10)this.reset()}draw(){ctx.save();if(this.isDiamond){ctx.translate(this.x,this.y);ctx.rotate(Math.PI/4);ctx.fillStyle=this.colorBase+(this.opacity*.6)+')';ctx.shadowColor=this.colorBase+'0.6)';ctx.shadowBlur=15;ctx.fillRect(-this.size/2,-this.size/2,this.size,this.size)}else{ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);ctx.fillStyle=this.colorBase+this.opacity+')';ctx.fill()}ctx.restore()}}
+for(let i=0;i<90;i++)particles.push(new Particle());
+function drawConnections(){for(let i=0;i<particles.length;i++)for(let j=i+1;j<particles.length;j++){const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<120){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=`rgba(37,99,235,${(1-dist/120)*.08})`;ctx.lineWidth=.5;ctx.stroke()}}}
+function animateCanvas(){ctx.clearRect(0,0,cw,ch);particles.forEach(p=>{p.update();p.draw()});drawConnections();requestAnimationFrame(animateCanvas)}animateCanvas();
+document.getElementById('hero').addEventListener('mousemove',e=>{const cx=(e.clientX/cw-.5)*2,cy=(e.clientY/ch-.5)*2;gsap.to('.hero-content',{x:cx*-8,y:cy*-5,duration:.8,ease:'power2.out'});gsap.to('.glow-blue',{x:cx*20,y:cy*15,duration:1,ease:'power2.out'});gsap.to('.glow-purple',{x:cx*-15,y:cy*-20,duration:1,ease:'power2.out'})});
+
+// Main Animations
+function initAnimations(){
+  gsap.to('.hero-line-inner',{y:0,duration:1.2,stagger:.15,ease:'power4.out'});
+  gsap.to('.hero-sub',{opacity:1,y:0,duration:1,delay:.5,ease:'power3.out'});
+  gsap.to('.hero-btns',{opacity:1,y:0,duration:1,delay:.7,ease:'power3.out'});
+  gsap.to('#scrollInd',{opacity:1,duration:1,delay:1.5});
+  ScrollTrigger.create({start:'top -200',trigger:'#hero',onLeave:()=>gsap.to('#scrollInd',{opacity:0,duration:.3}),onEnterBack:()=>gsap.to('#scrollInd',{opacity:1,duration:.3})});
+  gsap.utils.toArray('.reveal').forEach(el=>{ScrollTrigger.create({trigger:el,start:'top 88%',once:true,onEnter:()=>{gsap.to(el,{opacity:1,y:0,duration:.8,ease:'power3.out'})}})});
+
+  const rawClips=document.querySelectorAll('.raw-clip');
+  ScrollTrigger.create({trigger:'#stage1',start:'top 60%',end:'bottom 40%',scrub:1,onUpdate:self=>{const p=self.progress;rawClips.forEach((c,i)=>{const ox=parseFloat(c.dataset.ox),oy=parseFloat(c.dataset.oy),or=parseFloat(c.dataset.or),tx=(i%4)*22+5,ty=Math.floor(i/4)*50+15;c.style.left=ox+(tx-ox)*p+'%';c.style.top=oy+(ty-oy)*p+'%';c.style.transform=`rotate(${or*(1-p)}deg)`;c.style.borderColor=`rgba(0,229,255,${.15+p*.3})`})}});
+
+  const clipBlocks=document.querySelectorAll('.clip-block');
+  ScrollTrigger.create({trigger:'#stage2',start:'top 60%',end:'bottom 40%',scrub:1,onUpdate:self=>{const p=self.progress;document.getElementById('playhead').style.left=p*100+'%';clipBlocks.forEach((b,i)=>{const t=i/clipBlocks.length;if(p>t){const lp=Math.min(1,(p-t)*4);b.style.opacity=lp;b.style.transform=`scaleX(${lp})`}})}});
+
+  ScrollTrigger.create({trigger:'#stage3',start:'top 50%',end:'center center',scrub:1,onUpdate:self=>{const p=self.progress;const t=document.getElementById('motionTitle');t.style.opacity=p;t.style.transform=`translateX(${-30+p*30}px)`;const l=document.getElementById('motionLower');l.style.width=p*300+'px';l.style.paddingLeft=p>.3?'16px':'0';document.querySelectorAll('#motionParticles > div').forEach((d,i)=>{d.style.opacity=Math.max(0,p*2-i*.1);d.style.transform=`translateY(${(1-p)*20}px)`})}});
+
+  ScrollTrigger.create({trigger:'#stage4',start:'top 60%',end:'bottom 40%',scrub:1,onUpdate:self=>{const p=self.progress;document.getElementById('gradeAfter').style.clipPath=`inset(0 ${100-p*100}% 0 0)`;document.getElementById('gradeSplit').style.left=p*100+'%'}});
+
+  ScrollTrigger.create({trigger:'#stage5',start:'top 60%',end:'bottom 40%',scrub:1,onUpdate:self=>{const p=self.progress;document.querySelectorAll('.wave-bar').forEach((bar,i)=>{const h=Math.sin((i/60)*Math.PI*4+p*Math.PI*6)*40*p+20*p+Math.random()*10*p;bar.style.height=Math.max(4,h)+'px';bar.style.opacity=.3+p*.7})}});
+
+  ScrollTrigger.create({trigger:'#stage6',start:'top 60%',end:'bottom 40%',scrub:1,onUpdate:self=>{const p=self.progress;document.getElementById('renderFill').style.width=p*100+'%';document.getElementById('renderPct').textContent=Math.round(p*100)+'%';if(p>.7){const sp=(p-.7)/.3;document.getElementById('platformIcons').style.opacity=sp;document.getElementById('platformIcons').style.transform=`translateY(${(1-sp)*20}px)`}else{document.getElementById('platformIcons').style.opacity=0}}});
+
+  document.querySelectorAll('[data-tilt]').forEach(card=>{card.addEventListener('mousemove',e=>{const r=card.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,cx=r.width/2,cy=r.height/2;card.style.transform=`perspective(800px) rotateX(${((y-cy)/cy)*-6}deg) rotateY(${((x-cx)/cx)*6}deg) scale(1.02)`;card.style.setProperty('--mx',x+'px');card.style.setProperty('--my',y+'px')});card.addEventListener('mouseleave',()=>{card.style.transform='perspective(800px) rotateX(0) rotateY(0) scale(1)'})});
+
+  const track=document.getElementById('projectsTrack'),totalScroll=track.scrollWidth-window.innerWidth;
+  gsap.to(track,{x:-totalScroll,ease:'none',scrollTrigger:{trigger:'.projects-wrapper',start:'top 20%',end:()=>`+=${totalScroll}`,scrub:1,pin:true,anticipatePin:1}});
+
+  document.querySelectorAll('.counter').forEach(counter=>{const target=parseInt(counter.dataset.target);ScrollTrigger.create({trigger:counter,start:'top 85%',once:true,onEnter:()=>{gsap.to({val:0},{val:target,duration:2,ease:'power2.out',onUpdate:function(){counter.textContent=Math.round(this.targets()[0].val)}})}})});
+
+  document.querySelectorAll('.logo-item').forEach(item=>{item.addEventListener('mouseenter',()=>{gsap.to(item,{scale:1.15,duration:.4,ease:'power2.out'})});item.addEventListener('mouseleave',()=>{gsap.to(item,{scale:1,duration:.6,ease:'elastic.out(1,0.5)'})})});
+
+  document.querySelectorAll('.magnetic-wrap').forEach(btn=>{btn.addEventListener('mousemove',e=>{const r=btn.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;gsap.to(btn,{x:x*.3,y:y*.3,duration:.4,ease:'power2.out'})});btn.addEventListener('mouseleave',()=>{gsap.to(btn,{x:0,y:0,duration:.6,ease:'elastic.out(1,.4)'})})});
+
+  const modal=document.getElementById('showreelModal');
+  document.getElementById('showreelBtn').addEventListener('click',()=>{modal.style.display='flex';gsap.from(modal,{opacity:0,duration:.4});lenis.stop()});
+  document.getElementById('closeModal').addEventListener('click',()=>{gsap.to(modal,{opacity:0,duration:.3,onComplete:()=>{modal.style.display='none';lenis.start()}})});
+  modal.addEventListener('click',e=>{if(e.target===modal)document.getElementById('closeModal').click()});
+
+  document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t)lenis.scrollTo(t,{offset:-60})})});
+}
+</script>
+</body>
+</html>
